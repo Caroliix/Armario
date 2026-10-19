@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SmartCloset AI - Tu Armario Inteligente</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    .checkerboard {
+      background-color: #f8fafc;
+      background-image: 
+        linear-gradient(45deg, #e2e8f0 25%, transparent 25%), 
+        linear-gradient(-45deg, #e2e8f0 25%, transparent 25%), 
+        linear-gradient(45deg, transparent 75%, #e2e8f0 75%), 
+        linear-gradient(-45deg, transparent 75%, #e2e8f0 75%);
+      background-size: 16px 16px;
+      background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+    }
+    .tab-active {
+      border-bottom: 3px solid #4f46e5;
+      color: #4f46e5;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col font-sans">
+
+  <!-- Header -->
+  <header class="bg-white shadow-sm sticky top-0 z-30">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex flex-wrap justify-between items-center gap-4">
+      <div class="flex items-center space-x-3">
+        <div class="bg-indigo-600 text-white p-2.5 rounded-xl shadow-md">
+          <i class="fa-solid fa-wand-magic-sparkles text-xl"></i>
+        </div>
+        <div>
+          <h1 class="text-xl font-bold text-slate-900 leading-tight">SmartCloset AI</h1>
+          <p class="text-xs text-slate-500">Armario Digital & Estilista Inteligente</p>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="flex space-x-6 text-sm">
+        <button onclick="switchTab('wardrobe')" id="tab-wardrobe" class="py-2 px-1 tab-active transition flex items-center gap-2">
+          <i class="fa-solid fa-shirt"></i> Mi Armario (<span id="count-items">0</span>)
+        </button>
+        <button onclick="switchTab('add')" id="tab-add" class="py-2 px-1 text-slate-500 hover:text-slate-800 transition flex items-center gap-2">
+          <i class="fa-solid fa-camera"></i> Subir Prenda
+        </button>
+        <button onclick="switchTab('stylist')" id="tab-stylist" class="py-2 px-1 text-slate-500 hover:text-slate-800 transition flex items-center gap-2">
+          <i class="fa-solid fa-sparkles text-amber-500"></i> Estilista IA
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-grow max-w-6xl w-full mx-auto px-4 py-6">
+
+    <!-- SECTION 1: MI ARMARIO -->
+    <section id="sec-wardrobe" class="space-y-6">
+      <!-- Filtros -->
+      <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <h2 class="text-sm font-semibold text-slate-700 uppercase tracking-wider">Filtros del Armario</h2>
+          <button onclick="resetFilters()" class="text-xs text-indigo-600 hover:underline">Limpiar filtros</button>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+          <select id="filter-type" onchange="renderWardrobe()" class="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm">
+            <option value="">Todos los tipos</option>
+            <option value="Superior">Parte Superior</option>
+            <option value="Inferior">Parte Inferior</option>
+            <option value="Cuerpo Entero">Cuerpo Entero</option>
+            <option value="Abrigo">Abrigo / Chaqueta</option>
+            <option value="Calzado">Calzado</option>
+            <option value="Accesorio">Accesorio</option>
+          </select>
+
+          <select id="filter-season" onchange="renderWardrobe()" class="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm">
+            <option value="">Todas las estaciones</option>
+            <option value="Primavera">Primavera</option>
+            <option value="Verano">Verano</option>
+            <option value="Otoño">Otoño</option>
+            <option value="Invierno">Invierno</option>
+            <option value="Todo el año">Todo el año</option>
+          </select>
+
+          <select id="filter-event" onchange="renderWardrobe()" class="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm">
+            <option value="">Todos los eventos</option>
+            <option value="Casual">Casual / Diario</option>
+            <option value="Trabajo">Trabajo / Oficina</option>
+            <option value="Fiesta">Fiesta / Noche</option>
+            <option value="Formal">Formal / Gala</option>
+            <option value="Deporte">Deporte</option>
+          </select>
+
+          <select id="filter-color" onchange="renderWardrobe()" class="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm">
+            <option value="">Todos los colores</option>
+            <option value="Negro">Negro</option>
+            <option value="Blanco">Blanco</option>
+            <option value="Gris">Gris</option>
+            <option value="Beige">Beige / Crudo</option>
+            <option value="Azul Marino">Azul Marino</option>
+            <option value="Azul Claro">Azul Claro</option>
+            <option value="Rojo">Rojo / Burdeos</option>
+            <option value="Verde">Verde / Oliva</option>
+            <option value="Rosa">Rosa</option>
+            <option value="Amarillo">Amarillo / Mostaza</option>
+            <option value="Marrón">Marrón / Camel</option>
+          </select>
+
+          <select id="filter-textile" onchange="renderWardrobe()" class="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm">
+            <option value="">Todos los textiles</option>
+            <option value="Algodón">Algodón</option>
+            <option value="Vaquero (Denim)">Vaquero (Denim)</option>
+            <option value="Lino">Lino</option>
+            <option value="Lana / Punto">Lana / Punto</option>
+            <option value="Seda / Satén">Seda / Satén</option>
+            <option value="Cuero / Polipiel">Cuero / Polipiel</option>
+            <option value="Deportivo / Licra">Deportivo / Licra</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Grid de prendas -->
+      <div id="wardrobe-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4"></div>
+    </section>
+
+    <!-- SECTION 2: SUBIR PRENDA Y BORRAR FONDO -->
+    <section id="sec-add" class="hidden max-w-2xl mx-auto bg-white p-6 rounded-2xl shadow-sm border border-slate-100 space-y-6">
+      <div>
+        <h2 class="text-lg font-bold text-slate-900">Añadir Nueva Prenda</h2>
+        <p class="text-sm text-slate-500">Sube una foto y recorta el fondo automáticamente para que luzca genial en tu armario.</p>
+      </div>
+
+      <!-- Zona de Imagen -->
+      <div class="space-y-3">
+        <div class="flex flex-col items-center justify-center border-2 border-dashed border-slate-300 rounded-xl p-4 checkerboard min-h-[240px] relative">
+          <img id="preview-img" class="max-h-56 object-contain hidden z-10" alt="Vista previa">
+          <div id="upload-placeholder" class="text-center space-y-2">
+            <i class="fa-solid fa-cloud-arrow-up text-4xl text-indigo-500"></i>
+            <p class="text-sm font-medium text-slate-700">Haz clic para subir una foto de tu ropa</p>
+            <p class="text-xs text-slate-400">JPG, PNG o WEBP (Recomendado sobre fondo contrastado)</p>
+          </div>
+          <input type="file" id="file-input" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer" onchange="handleImageUpload(event)">
+        </div>
+
+        <!-- Botones de recorte de fondo -->
+        <div id="bg-tools" class="hidden flex flex-wrap gap-2 justify-between items-center bg-indigo-50 p-3 rounded-xl">
+          <span id="bg-status" class="text-xs text-indigo-800 font-medium flex items-center gap-2">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> ¿Quieres eliminar el fondo de la foto?
+          </span>
+          <div class="flex gap-2">
+            <button type="button" onclick="removeBgFast()" class="bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 px-3 py-1.5 rounded-lg text-xs font-semibold shadow-sm transition">
+              Recorte Rápido (Color de esquina)
+            </button>
+            <button type="button" onclick="removeBgAI()" id="btn-ai-bg" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold shadow-sm transition">
+              Recorte IA Profundo
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Formulario de Categorías -->
+      <form id="add-form" onsubmit="saveGarment(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Nombre de la prenda</label>
+          <input type="text" id="item-name" required placeholder="Ej. Camisa blanca de lino" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Tipo de Prenda</label>
+            <select id="item-type" required class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm">
+              <option value="Superior">Parte Superior (Camiseta, Camisa, Top)</option>
+              <option value="Inferior">Parte Inferior (Pantalón, Falda)</option>
+              <option value="Cuerpo Entero">Cuerpo Entero (Vestido, Mono)</option>
+              <option value="Abrigo">Abrigo / Chaqueta / Blazer</option>
+              <option value="Calzado">Calzado (Zapatillas, Botas, Zapatos)</option>
+              <option value="Accesorio">Accesorio (Bolso, Cinturón, Gorra)</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Estación</label>
+            <select id="item-season" required class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm">
+              <option value="Todo el año">Todo el año</option>
+              <option value="Primavera">Primavera</option>
+              <option value="Verano">Verano</option>
+              <option value="Otoño">Otoño</option>
+              <option value="Invierno">Invierno</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Tipo de Evento</label>
+            <select id="item-event" required class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm">
+              <option value="Casual">Casual / Diario</option>
+              <option value="Trabajo">Trabajo / Oficina</option>
+              <option value="Fiesta">Fiesta / Noche</option>
+              <option value="Formal">Formal / Gala</option>
+              <option value="Deporte">Deporte</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Color Principal</label>
+            <select id="item-color" required class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm">
+              <option value="Blanco">Blanco</option>
+              <option value="Negro">Negro</option>
+              <option value="Gris">Gris</option>
+              <option value="Beige">Beige / Crudo</option>
+              <option value="Azul Marino">Azul Marino</option>
+              <option value="Azul Claro">Azul Claro</option>
+              <option value="Rojo">Rojo / Burdeos</option>
+              <option value="Verde">Verde / Oliva</option>
+              <option value="Rosa">Rosa</option>
+              <option value="Amarillo">Amarillo / Mostaza</option>
+              <option value="Marrón">Marrón / Camel</option>
+            </select>
+          </div>
+
+          <div class="sm:col-span-2">
+            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Textil / Material</label>
+            <select id="item-textile" required class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm">
+              <option value="Algodón">Algodón</option>
+              <option value="Vaquero (Denim)">Vaquero (Denim)</option>
+              <option value="Lino">Lino</option>
+              <option value="Lana / Punto">Lana / Punto</option>
+              <option value="Seda / Satén">Seda / Satén</option>
+              <option value="Cuero / Polipiel">Cuero / Polipiel</option>
+              <option value="Deportivo / Licra">Deportivo / Licra</option>
+            </select>
+          </div>
+        </div>
+
+        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl shadow-md transition">
+          Guardar en mi Armario
+        </button>
+      </form>
+    </section>
+
+    <!-- SECTION 3: ESTILISTA IA (COMBINACIONES) -->
+    <section id="sec-stylist" class="hidden space-y-6">
+      <div class="bg-gradient-to-r from-indigo-600 to-violet-600 text-white p-6 rounded-2xl shadow-md">
+        <div class="max-w-3xl space-y-4">
+          <div class="inline-flex items-center gap-2 bg-white/20 px-3 py-1 rounded-full text-xs font-medium">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> Motor de Armonía Cromática y Textil
+          </div>
+          <h2 class="text-2xl font-bold">Generador de Outfits con IA</h2>
+          <p class="text-sm text-indigo-100">Selecciona para qué ocasión y estación te vas a vestir. La IA evaluará tus prendas combinando colores neutros y complementarios, texturas compatibles y coherencia climática.</p>
+          
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 text-slate-800">
+            <select id="ai-event" class="bg-white rounded-xl px-3 py-2.5 text-sm font-medium shadow-sm">
+              <option value="Casual">Evento: Casual / Diario</option>
+              <option value="Trabajo">Evento: Trabajo / Oficina</option>
+              <option value="Fiesta">Evento: Fiesta / Noche</option>
+              <option value="Formal">Evento: Formal / Gala</option>
+              <option value="Deporte">Evento: Deporte</option>
+            </select>
+
+            <select id="ai-season" class="bg-white rounded-xl px-3 py-2.5 text-sm font-medium shadow-sm">
+              <option value="Primavera">Estación: Primavera</option>
+              <option value="Verano">Estación: Verano</option>
+              <option value="Otoño">Estación: Otoño</option>
+              <option value="Invierno">Estación: Invierno</option>
+            </select>
+
+            <button onclick="generateOutfits()" class="bg-amber-400 hover:bg-amber-300 text-slate-900 font-bold py-2.5 px-4 rounded-xl shadow-md transition flex items-center justify-center gap-2">
+              <i class="fa-solid fa-bolt"></i> Crear Combinaciones
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Resultados de Outfits -->
+      <div id="outfits-container" class="space-y-6"></div>
+    </section>
+
+  </main>
+
+  <script>
+    // --- MAPA DE COLORES Y REGLAS DE IA ---
+    const COLOR_HEX = {
+      'Blanco': '#FFFFFF', 'Negro': '#1E293B', 'Gris': '#94A3B8', 'Beige': '#E5D3B3',
+      'Azul Marino': '#1E3A8A', 'Azul Claro': '#7DD3FC', 'Rojo': '#DC2626',
+      'Verde': '#15803D', 'Rosa': '#F472B6', 'Amarillo': '#EAB308', 'Marrón': '#78350F'
+    };
+
+    const NEUTRALS = ['Blanco', 'Negro', 'Gris', 'Beige', 'Azul Marino', 'Marrón'];
+    
+    const COLOR_HARMONY = {
+      'Azul Claro': ['Blanco', 'Beige', 'Azul Marino', 'Marrón', 'Rosa', 'Amarillo'],
+      'Rojo': ['Negro', 'Blanco', 'Azul Marino', 'Beige', 'Gris', 'Vaquero (Denim)'],
+      'Verde': ['Blanco', 'Beige', 'Marrón', 'Negro', 'Amarillo', 'Azul Marino'],
+      'Rosa': ['Blanco', 'Gris', 'Azul Marino', 'Azul Claro', 'Beige', 'Negro'],
+      'Amarillo': ['Blanco', 'Azul Marino', 'Azul Claro', 'Verde', 'Negro', 'Gris']
+    };
+
+    const INCOMPATIBLE_TEXTILES = [
+      ['Lino', 'Lana / Punto'],
+      ['Deportivo / Licra', 'Seda / Satén'],
+      ['Deportivo / Licra', 'Lino']
+    ];
+
+    // --- GENERADOR DE IMÁGENES DEMO SIN FONDO (SVG) ---
+    function createDemoSVG(type, colorName) {
+      const fill = COLOR_HEX[colorName] || '#CBD5E1';
+      const stroke = colorName === 'Blanco' ? '#94A3B8' : '#1E293B';
+      let path = '';
+      if (type === 'Superior') {
+        path = `<path d="M50 30 L80 20 L120 20 L150 30 L175 70 L145 85 L135 55 L135 170 L65 170 L65 55 L55 85 L25 70 Z" fill="${fill}" stroke="${stroke}" stroke-width="5" stroke-linejoin="round"/>`;
+      } else if (type === 'Inferior') {
+        path = `<path d="M60 20 L140 20 L150 180 L110 180 L100 75 L90 180 L50 180 Z" fill="${fill}" stroke="${stroke}" stroke-width="5" stroke-linejoin="round"/>`;
+      } else if (type === 'Abrigo') {
+        path = `<path d="M45 25 L80 15 L120 15 L155 25 L180 85 L150 95 L140 50 L140 175 L102 175 L102 45 L98 45 L98 175 L60 175 L60 50 L50 95 L20 85 Z" fill="${fill}" stroke="${stroke}" stroke-width="5" stroke-linejoin="round"/>`;
+      } else if (type === 'Calzado') {
+        path = `<path d="M40 130 L85 130 L105 95 L135 95 L140 140 L170 145 L170 165 L40 165 Z" fill="${fill}" stroke="${stroke}" stroke-width="5" stroke-linejoin="round"/>`;
+      } else {
+        path = `<circle cx="100" cy="100" r="60" fill="${fill}" stroke="${stroke}" stroke-width="5"/>`;
+      }
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">${path}</svg>`;
+      return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+    }
+
+    // --- ESTADO INICIAL DEL ARMARIO ---
+    const DEFAULT_ITEMS = [
+      { id: 1, name: 'Camisa Blanca Oxford', type: 'Superior', season: 'Todo el año', event: 'Trabajo', color: 'Blanco', textile: 'Algodón', img: createDemoSVG('Superior', 'Blanco') },
+      { id: 2, name: 'Camiseta Básica Negra', type: 'Superior', season: 'Todo el año', event: 'Casual', color: 'Negro', textile: 'Algodón', img: createDemoSVG('Superior', 'Negro') },
+      { id: 3, name: 'Blusa Verde Oliva', type: 'Superior', season: 'Primavera', event: 'Casual', color: 'Verde', textile: 'Lino', img: createDemoSVG('Superior', 'Verde') },
+      { id: 4, name: 'Vaquero Azul Recto', type: 'Inferior', season: 'Todo el año', event: 'Casual', color: 'Azul Marino', textile: 'Vaquero (Denim)', img: createDemoSVG('Inferior', 'Azul Marino') },
+      { id: 5, name: 'Pantalón Chino Beige', type: 'Inferior', season: 'Primavera', event: 'Trabajo', color: 'Beige', textile: 'Algodón', img: createDemoSVG('Inferior', 'Beige') },
+      { id: 6, name: 'Blazer Azul Marino', type: 'Abrigo', season: 'Otoño', event: 'Trabajo', color: 'Azul Marino', textile: 'Lana / Punto', img: createDemoSVG('Abrigo', 'Azul Marino') },
+      { id: 7, name: 'Cazadora de Cuero', type: 'Abrigo', season: 'Otoño', event: 'Fiesta', color: 'Negro', textile: 'Cuero / Polipiel', img: createDemoSVG('Abrigo', 'Negro') },
+      { id: 8, name: 'Sneakers Blancas', type: 'Calzado', season: 'Todo el año', event: 'Casual', color: 'Blanco', textile: 'Cuero / Polipiel', img: createDemoSVG('Calzado', 'Blanco') },
+      { id: 9, name: 'Mocasines Marrón', type: 'Calzado', season: 'Todo el año', event: 'Trabajo', color: 'Marrón', textile: 'Cuero / Polipiel', img: createDemoSVG('Calzado', 'Marrón') }
+    ];
+
+    let wardrobe = JSON.parse(localStorage.getItem('smartcloset_items')) || DEFAULT_ITEMS;
+    let currentUploadedImage = null;
+
+    function saveToStorage() {
+      try {
+        localStorage.setItem('smartcloset_items', JSON.stringify(wardrobe));
+      } catch (e) {
+        alert('El almacenamiento está lleno. Intenta borrar alguna prenda antigua.');
+      }
+      document.getElementById('count-items').innerText = wardrobe.length;
+    }
+
+    // --- NAVEGACIÓN ---
+    function switchTab(tab) {
+      ['wardrobe', 'add', 'stylist'].forEach(t => {
+        document.getElementById(`sec-${t}`).classList.add('hidden');
+        document.getElementById(`tab-${t}`).classList.remove('tab-active');
+        document.getElementById(`tab-${t}`).classList.add('text-slate-500');
+      });
+      document.getElementById(`sec-${tab}`).classList.remove('hidden');
+      document.getElementById(`tab-${tab}`).classList.add('tab-active');
+      document.getElementById(`tab-${tab}`).classList.remove('text-slate-500');
+
+      if (tab === 'wardrobe') renderWardrobe();
+      if (tab === 'stylist') generateOutfits();
+    }
+
+    // --- RENDERIZAR ARMARIO ---
+    function renderWardrobe() {
+      const fType = document.getElementById('filter-type').value;
+      const fSeason = document.getElementById('filter-season').value;
+      const fEvent = document.getElementById('filter-event').value;
+      const fColor = document.getElementById('filter-color').value;
+      const fTextile = document.getElementById('filter-textile').value;
+
+      const filtered = wardrobe.filter(item => {
+        return (!fType || item.type === fType) &&
+               (!fSeason || item.season === fSeason || item.season === 'Todo el año') &&
+               (!fEvent || item.event === fEvent) &&
+               (!fColor || item.color === fColor) &&
+               (!fTextile || item.textile === fTextile);
+      });
+
+      const grid = document.getElementById('wardrobe-grid');
+      document.getElementById('count-items').innerText = wardrobe.length;
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `<div class="col-span-full bg-white p-8 rounded-2xl text-center text-slate-400">No hay prendas que coincidan con estos filtros.</div>`;
+        return;
+      }
+
+      grid.innerHTML = filtered.map(item => `
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col justify-between group hover:shadow-md transition">
+          <div class="relative checkerboard h-44 flex items-center justify-center p-4">
+            <img src="${item.img}" alt="${item.name}" class="max-h-full max-w-full object-contain drop-shadow-sm group-hover:scale-105 transition">
+            <button onclick="deleteItem(${item.id})" title="Eliminar prenda" class="absolute top-2 right-2 bg-white/80 hover:bg-red-500 hover:text-white text-slate-500 w-7 h-7 rounded-full text-xs transition flex items-center justify-center shadow-sm">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+            <span class="absolute bottom-2 left-2 bg-slate-900/75 text-white text-[10px] px-2 py-0.5 rounded-full">${item.type}</span>
+          </div>
+          <div class="p-3.5 space-y-2">
+            <h3 class="font-bold text-sm text-slate-800 truncate">${item.name}</h3>
+            <div class="flex flex-wrap gap-1 text-[11px]">
+              <span class="bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-md font-medium">${item.event}</span>
+              <span class="bg-amber-50 text-amber-700 px-2 py-0.5 rounded-md">${item.season}</span>
+              <span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md">${item.textile}</span>
+            </div>
+            <div class="flex items-center gap-1.5 pt-1 text-xs text-slate-500">
+              <span class="w-3 h-3 rounded-full border border-slate-300 inline-block" style="background-color: ${COLOR_HEX[item.color] || '#ccc'}"></span>
+              <span>${item.color}</span>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function resetFilters() {
+      ['filter-type', 'filter-season', 'filter-event', 'filter-color', 'filter-textile'].forEach(id => {
+        document.getElementById(id).value = '';
+      });
+      renderWardrobe();
+    }
+
+    function deleteItem(id) {
+      wardrobe = wardrobe.filter(i => i.id !== id);
+      saveToStorage();
+      renderWardrobe();
+    }
+
+    // --- SUBIDA DE IMAGEN Y ELIMINACIÓN DE FONDO ---
+    function handleImageUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+          // Redimensionar para optimizar memoria
+          const canvas = document.createElement('canvas');
+          const maxDim = 500;
+          let w = img.width, h = img.height;
+          if (w > h && w > maxDim) { h *= maxDim / w; w = maxDim; }
+          else if (h > maxDim) { w *= maxDim / h; h = maxDim; }
+          canvas.width = w; canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+          currentUploadedImage = canvas.toDataURL('image/png');
+
+          const preview = document.getElementById('preview-img');
+          preview.src = currentUploadedImage;
+          preview.classList.remove('hidden');
+          document.getElementById('upload-placeholder').classList.add('hidden');
+          document.getElementById('bg-tools').classList.remove('hidden');
+          document.getElementById('bg-status').innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> Imagen lista. Puedes recortar el fondo ahora.`;
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // Recorte rápido por inundación de color (sin descargas pesadas)
+    function removeBgFast() {
+      if (!currentUploadedImage) return;
+      const status = document.getElementById('bg-status');
+      status.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Eliminando fondo uniforme...`;
+
+      const img = new Image();
+      img.onload = function() {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width; canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imgData.data;
+
+        // Tomar color de la esquina superior izquierda como referencia de fondo
+        const r0 = data[0], g0 = data[1], b0 = data[2];
+        const tolerance = 48;
+
+        for (let i = 0; i < data.length; i += 4) {
+          const dr = data[i] - r0;
+          const dg = data[i + 1] - g0;
+          const db = data[i + 2] - b0;
+          const dist = Math.sqrt(dr * dr + dg * dg + db * db);
+          if (dist < tolerance) {
+            data[i + 3] = 0; // Transparente
+          }
+        }
+
+        ctx.putImageData(imgData, 0, 0);
+        currentUploadedImage = canvas.toDataURL('image/png');
+        document.getElementById('preview-img').src = currentUploadedImage;
+        status.innerHTML = `<i class="fa-solid fa-check text-emerald-600"></i> ¡Fondo eliminado con éxito!`;
+      };
+      img.src = currentUploadedImage;
+    }
+
+    // Recorte IA mediante red neuronal en el navegador (@imgly/background-removal)
+    async function removeBgAI() {
+      if (!currentUploadedImage) return;
+      const status = document.getElementById('bg-status');
+      const btn = document.getElementById('btn-ai-bg');
+      btn.disabled = true;
+      status.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Descargando modelo IA y recortando prenda (10-20s)...`;
+
+      try {
+        const module = await import('https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.5/+esm');
+        const removeBackground = module.default || module.removeBackground;
+        const blob = await removeBackground(currentUploadedImage);
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          currentUploadedImage = reader.result;
+          document.getElementById('preview-img').src = currentUploadedImage;
+          status.innerHTML = `<i class="fa-solid fa-check text-emerald-600"></i> ¡Recorte IA completado con precisión!`;
+          btn.disabled = false;
+        };
+        reader.readAsDataURL(blob);
+      } catch (err) {
+        // Si falla la red o WebAssembly, aplica el recorte inteligente de respaldo
+        removeBgFast();
+        btn.disabled = false;
+      }
+    }
+
+    function saveGarment(e) {
+      e.preventDefault();
+      const type = document.getElementById('item-type').value;
+      const color = document.getElementById('item-color').value;
+      const newItem = {
+        id: Date.now(),
+        name: document.getElementById('item-name').value,
+        type: type,
+        season: document.getElementById('item-season').value,
+        event: document.getElementById('item-event').value,
+        color: color,
+        textile: document.getElementById('item-textile').value,
+        img: currentUploadedImage || createDemoSVG(type, color)
+      };
+
+      wardrobe.unshift(newItem);
+      saveToStorage();
+
+      // Reset form
+      document.getElementById('add-form').reset();
+      currentUploadedImage = null;
+      document.getElementById('preview-img').classList.add('hidden');
+      document.getElementById('upload-placeholder').classList.remove('hidden');
+      document.getElementById('bg-tools').classList.add('hidden');
+
+      switchTab('wardrobe');
+    }
+
+    // --- MOTOR DE ESTILISTA IA ---
+    function evaluateOutfitHarmony(items, targetSeason, targetEvent) {
+      let score = 70;
+      let reasons = [];
+
+      // 1. Armonía de color
+      const colors = items.map(i => i.color);
+      const nonNeutrals = colors.filter(c => !NEUTRALS.includes(c));
+
+      if (nonNeutrals.length === 0) {
+        score += 15;
+        reasons.push('Paleta minimalista de tonos neutros que siempre combina con elegancia');
+      } else if (nonNeutrals.length === 1) {
+        score += 18;
+        reasons.push(`El tono ${nonNeutrals[0]} destaca como protagonista sobre una base neutra equilibrada`);
+      } else {
+        const [c1, c2] = nonNeutrals;
+        if (c1 === c2) {
+          score += 12;
+          reasons.push(`Coordinación monocromática en tonos ${c1}`);
+        } else if ((COLOR_HARMONY[c1] && COLOR_HARMONY[c1].includes(c2)) || (COLOR_HARMONY[c2] && COLOR_HARMONY[c2].includes(c1))) {
+          score += 16;
+          reasons.push(`Excelente contraste cromático entre ${c1} y ${c2}`);
+        } else {
+          score -= 15;
+        }
+      }
+
+      // 2. Compatibilidad de textiles
+      const textiles = items.map(i => i.textile);
+      let textileClash = false;
+      for (const [t1, t2] of INCOMPATIBLE_TEXTILES) {
+        if (textiles.includes(t1) && textiles.includes(t2)) {
+          textileClash = true;
+          score -= 20;
+        }
+      }
+      if (!textileClash) {
+        score += 10;
+        reasons.push(`Texturas compatibles (${[...new Set(textiles)].join(' + ')})`);
+      }
+
+      // 3. Adecuación a la estación y evento
+      const eventMatches = items.filter(i => i.event === targetEvent).length;
+      if (eventMatches === items.length) {
+        score += 8;
+        reasons.push(`100% adaptado para un evento de tipo ${targetEvent}`);
+      }
+
+      return {
+        score: Math.min(99, Math.max(50, score)),
+        explanation: reasons.join(' • ')
+      };
+    }
+
+    function generateOutfits() {
+      const targetEvent = document.getElementById('ai-event').value;
+      const targetSeason = document.getElementById('ai-season').value;
+      const container = document.getElementById('outfits-container');
+
+      const pool = wardrobe.filter(i => 
+        (i.season === targetSeason || i.season === 'Todo el año') &&
+        (i.event === targetEvent || i.event === 'Casual')
+      );
+
+      const tops = pool.filter(i => i.type === 'Superior');
+      const bottoms = pool.filter(i => i.type === 'Inferior');
+      const fulls = pool.filter(i => i.type === 'Cuerpo Entero');
+      const coats = pool.filter(i => i.type === 'Abrigo');
+      const shoes = pool.filter(i => i.type === 'Calzado');
+
+      let combinations = [];
+
+      // Combinaciones de 2 piezas (Superior + Inferior)
+      tops.forEach(top => {
+        bottoms.forEach(bottom => {
+          const shoe = shoes[0] || null;
+          const coat = (targetSeason === 'Otoño' || targetSeason === 'Invierno') && coats.length > 0 ? coats[0] : null;
+          const parts = [top, bottom, coat, shoe].filter(Boolean);
+          const evalResult = evaluateOutfitHarmony(parts, targetSeason, targetEvent);
+          combinations.push({ parts, ...evalResult });
+        });
+      });
+
+      // Combinaciones de Cuerpo Entero
+      fulls.forEach(full => {
+        const shoe = shoes[0] || null;
+        const parts = [full, shoe].filter(Boolean);
+        const evalResult = evaluateOutfitHarmony(parts, targetSeason, targetEvent);
+        combinations.push({ parts, ...evalResult });
+      });
+
+      combinations.sort((a, b) => b.score - a.score);
+      const topOutfits = combinations.slice(0, 4);
+
+      if (topOutfits.length === 0) {
+        container.innerHTML = `
+          <div class="bg-white p-8 rounded-2xl text-center space-y-2 border border-slate-100">
+            <p class="text-slate-600 font-medium">Aún no tienes suficientes prendas para crear un look de <b>${targetEvent}</b> en <b>${targetSeason}</b>.</p>
+            <p class="text-xs text-slate-400">Asegúrate de tener al menos una parte superior y una inferior compatibles en tu armario.</p>
+          </div>`;
+        return;
+      }
+
+      container.innerHTML = topOutfits.map((outfit, idx) => `
+        <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+            <div class="flex items-center gap-2">
+              <span class="bg-indigo-600 text-white text-xs font-bold px-2.5 py-1 rounded-lg">Look #${idx + 1}</span>
+              <span class="text-sm font-semibold text-slate-700">Recomendación IA para ${targetEvent}</span>
+            </div>
+            <span class="bg-emerald-50 text-emerald-700 text-xs font-bold px-3 py-1 rounded-full border border-emerald-200">
+              <i class="fa-solid fa-star text-amber-400 mr-1"></i> ${outfit.score}% Match
+            </span>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            ${outfit.parts.map(p => `
+              <div class="bg-slate-50 rounded-xl p-3 flex flex-col items-center text-center">
+                <div class="h-28 flex items-center justify-center mb-2">
+                  <img src="${p.img}" class="max-h-full object-contain">
+                </div>
+                <span class="text-[10px] uppercase font-bold text-indigo-600">${p.type}</span>
+                <p class="text-xs font-semibold text-slate-800 truncate w-full">${p.name}</p>
+                <span class="text-[11px] text-slate-500">${p.color} •${p.textile}</span>
+              </div>
+            `).join('')}
+          </div>
+
+          <div class="bg-indigo-50/60 rounded-xl p-3 text-xs text-indigo-950 flex items-start gap-2">
+            <i class="fa-solid fa-wand-magic-sparkles text-indigo-600 mt-0.5"></i>
+            <div><b>Por qué funciona:</b> ${outfit.explanation}.</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Inicializar vista
+    renderWardrobe();
+  </script>
+</body>
+</html>
